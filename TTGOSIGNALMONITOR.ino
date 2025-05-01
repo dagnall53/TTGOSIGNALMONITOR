@@ -95,7 +95,7 @@ void IRAM_ATTR toggleButton2() {
   ButtonPressed = true;
   Button_pressed = 2;
 }
-
+char  VICTRONRES[120];
 
 #define BufferLength 500
 char nmea_1[500];
@@ -382,6 +382,11 @@ void ShowData(char* buf, uint8_t font, uint32_t TEXT_Colour) {  // show and rese
       buf[0] = 0;
       return;
     }
+    if (TEXT_Colour == TFT_RED) {
+     // Serial.printf("Victron :%s", buf); not serial print whilst sorting out data format!
+      buf[0] = 0;
+      return;
+    }
     if (TEXT_Colour == TFT_BLUE) {
       Serial.printf("UDP     :%s", buf);
       buf[0] = 0;
@@ -398,8 +403,8 @@ void ShowData(char* buf, uint8_t font, uint32_t TEXT_Colour) {  // show and rese
 void TestInputsOutputs() {
   if (Current_Settings.ESP_NOW_ON) {while (UpdateEspNow()) {ShowData(nmea_EXT, Current_Settings.ListTextSize, TFT_GREEN);} }
   if (Current_Settings.Serial_on) { Test_Serial_1();ShowData(nmea_1, Current_Settings.ListTextSize, TFT_WHITE); }
-  if (Current_Settings.UDP_ON) {Test_U(); ShowData(nmea_U, Current_Settings.ListTextSize, TFT_BLUE);
-  }
+  if (Current_Settings.UDP_ON) {Test_U(); ShowData(nmea_U, Current_Settings.ListTextSize, TFT_BLUE); }
+  if (Current_Settings.Victron_ON) {if (VICTRONRES[0]!=0) {ShowData(VICTRONRES, Current_Settings.ListTextSize, TFT_RED); }} 
 }
 
 void loop(void) {
