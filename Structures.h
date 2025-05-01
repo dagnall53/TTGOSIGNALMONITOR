@@ -21,7 +21,7 @@ struct MySettings {
 // Must use the "packed" attribute to make sure the compiler doesn't add any padding to deal with
 // word alignment.
 
-
+// victron ble structures
 
 
 typedef struct {

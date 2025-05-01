@@ -64,9 +64,13 @@ BLEScan *pBLEScan;
 //
 // And finally, reformatted into the array definition needed by this code:
 //
+//victron 300A shunt 
+//   dc 73 cb 15 53 51 cf 95 0f 9f 3a 95 8b 5c d9 6f
+//   e0 9d 8b 20 0c 61 23 8c 81 1a 62 1e 59 64 c4 4e
+//
 uint8_t key[16]={
-    0xdc, 0x73, 0xcb, 0x15, 0x53, 0x51, 0xcf, 0x95,
-    0x0f, 0x9f, 0x3a, 0x95, 0x8b, 0x5c, 0xd9, 0x6f
+    0xe0, 0x9d, 0x8b, 0x20, 0x0c, 0x61, 0x23, 0x8c,
+    0x81, 0x1a, 0x62, 0x1e, 0x59, 0x64, 0xc4, 0x4e
 };
 
 // Note: In my own (non-demo) code I paste the encryption key into a quoted character string
@@ -337,12 +341,13 @@ void BLEsetup()
   Serial.println(F("setup() complete."));
 }
 void BLEloop() {
-  //Serial.println(" BLE Scanning...");
+  Serial.print(" BLE Scanning...");
 /*  static double loopdelaytime;
   if (millis() <= loopdelaytime){return;}
   loopdelaytime=millis()+10000;*/
   BLEScanResults foundDevices = pBLEScan->start(scanTime, false);
+/
   pBLEScan->clearResults(); // delete results fromBLEScan buffer to release memory
- //  Serial.println(" BLE Scan done...");
+  Serial.printf(" buffer cleared %i.\n",foundDevices); 
 }
 

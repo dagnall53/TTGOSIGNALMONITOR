@@ -2,7 +2,7 @@
 #include "ESP_NOW_files.h"
 #include <esp_wifi.h>
 #include <esp_now.h>
-#include <Arduino.h> // for the char ? definition?
+#include <Arduino.h>  // for the char ? definition?
 //byte peerAddress[6];
 //const byte peerAddress_def[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };  // all receive
 esp_now_peer_info_t peerInfo;
@@ -32,45 +32,57 @@ bool Start_ESP_EXT() {  // start espnow and run Test_EspNOW() when data is seen 
   esp_wifi_get_channel(espnowchannel, secondch);
   return success;
 }
-bool donotdisturb; 
+bool donotdisturb;
 char nmea_ext_buffer[1000];
 char space[10];
 //functions "esp_now"  this function accepts data on interrupts and saves in nmea_EXT and (used to! )set 'line_EXT'
 void Test_EspNOW(const uint8_t* mac, const uint8_t* incomingData, int len) {
   EspNowIsRunning = true;
   char rxdata[249];  //incoming ESP seem to be always 248 long, so make sure we are big enough
-  if (!donotdisturb){ 
-  if (strlen(nmea_ext_buffer)<=752){  // add the esp now to the buffer .. if we have room 
-    memcpy(&rxdata, incomingData, sizeof(rxdata));
-    strcat(nmea_ext_buffer, rxdata);}
+  if (!donotdisturb) {
+    if (strlen(nmea_ext_buffer) <= 752) {  // add the esp now to the buffer .. if we have room
+      memcpy(&rxdata, incomingData, sizeof(rxdata));
+      strcat(nmea_ext_buffer, rxdata);
+    }
   }
 }
 
-void DebugBufChars(char* buf, int i){
- Serial.printf(" Buf has strlen %i Chars at %i are..i-2..[]...i+3 <%i><%i>[%i]<%i><%i><%i>\n",strlen(buf),i,buf[i-2],buf[i-1],buf[i],buf[i+1],buf[i+2],buf[i+3]); 
+void DebugBufChars(const char* msg, char* buf, int i) {
+  Serial.printf("\n %s strlen %i Chars at %i are..i-2..[]...i+4 <%i><%i>[%i]<%i><%i><%i><%i><%i>\n", msg,
+                strlen(buf), i, buf[i - 2], buf[i - 1], buf[i], buf[i + 1], buf[i + 2], buf[i + 3], buf[i + 4], buf[i + 5]);
 }
-bool UpdateEspNow() {    
-  bool _gotFirstLine ;
-  int offset =0;
-  donotdisturb=true; //   / DO NOT WANT interrupt to corrupt/add to nmea_ext_buffer whilst we are fiddling with it
+bool UpdateEspNow() {
+  bool _gotFirstLine;
+  int offset = 0;
+  //   / DO NOT WANT interrupt to corrupt/add to nmea_ext_buffer whilst we are fiddling with it
+  //DebugBufChars("NMEABUFFER start", nmea_ext_buffer, 2);
   if (nmea_EXT[0] == 0) {  // nmea_EXT EMPTY..  get another line from buffer?
-    if (nmea_ext_buffer[0] == 0 ) {  donotdisturb=false; return false; } // buffer empty 
-    _gotFirstLine=false;
-     for (int i = 0; i <= sizeof(nmea_ext_buffer); i++) {                       
-      if (_gotFirstLine) {nmea_ext_buffer[i - offset] = nmea_ext_buffer[i];}    // copy the rest back into the buffer, but shifted 'forwards/left' 
-      else {nmea_EXT[i] = nmea_ext_buffer[i];              // will be this on first loop..(!_gotfirstLine)  // build nmea_EXT..
-       if (nmea_ext_buffer[i] == 0x0A){ //DebugBufChars(nmea_ext_buffer, i); // got end of line.. 
-         _gotFirstLine = true,nmea_EXT[i+1] = 0;nmea_EXT[i+2] = 0;nmea_EXT[i+3] = 0;nmea_EXT[i+4] = 0;// unneeded extra eof 0's?
-         if ((nmea_ext_buffer[i+1] == 0x0D)&&nmea_ext_buffer[i+2] == 0x0A){i=i+2;}// sometimes we get CRLFCRLF.. ignore it 
-         i++; offset = i; 
+    if (nmea_ext_buffer[0] != 0) {
+      _gotFirstLine = false;
+      donotdisturb = true;
+      offset = 0;
+      for (int i = 0; i <= sizeof(nmea_ext_buffer); i++) {
+        if (_gotFirstLine) {
+          nmea_ext_buffer[offset] = nmea_ext_buffer[i];
+          offset++;
+        }  // copy the rest back into the buffer, but shifted 'forwards/left'
+        else {
+          nmea_EXT[i] = nmea_ext_buffer[i];                                                           // will be this on first loop..(!_gotfirstLine)  // build nmea_EXT..
+          if (nmea_ext_buffer[i] == 0x0A) {                                                           //DebugBufChars("at 0A found:",nmea_ext_buffer, i); // got end of line..
+            _gotFirstLine = true, nmea_EXT[i + 1] = 0;                                                //nmea_EXT[i+2] = 0;nmea_EXT[i+3] = 0;nmea_EXT[i+4] = 0;// unneeded extra eof 0's?
+            if ((nmea_ext_buffer[i + 1] == 0x0D) && (nmea_ext_buffer[i + 2] == 0x0A)) { i = i + 2; }  // sometimes we get CRLFCRLF.. ignore it
+          }
         }
       }
+      nmea_ext_buffer[offset] = 0;
     }
-    //DebugBufChars(nmea_ext_buffer, temp-offset);
-   donotdisturb=false;
-    return _gotFirstLine;
+    // if (strlen(nmea_ext_buffer)<=4){nmea_ext_buffer[0]=0;} // remove any strange remaining bits
+    //DebugBufChars("NMEABUFFER after", nmea_ext_buffer, 2);
+    //DebugBufChars("NMEAExT starts",nmea_EXT, 2); // show start of nmea_EXT
+    //donotdisturb = false;
+    //return _gotFirstLine;
   }
-  donotdisturb=false;
+  donotdisturb = false;
   return _gotFirstLine;
 }
 void EXTHeartbeat() {

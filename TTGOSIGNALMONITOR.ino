@@ -1,4 +1,3 @@
-
 /*************************************************************
   This sketch implements a simple serial receive terminal
   program for monitoring  messages
@@ -10,6 +9,10 @@ DO NOT FORGET TO CHANGE DISPLAY SELECT in User_Setup_Select.h !
 Or use UserSetup 
 
 use one of the LARGE non ota Partition schemes if trying Victron ble
+
+use esp32 dev module
+no ota 2M app 
+
 
  *************************************************************/
 #include <WiFi.h>
@@ -367,7 +370,7 @@ void DrawON_line(int Line, String text, uint8_t font, uint32_t TEXT_Colour) {
 
 void ShowData(char* buf, uint8_t font, uint32_t TEXT_Colour) {  // show and reset buf[0] to zero indicating data used
   if (buf[0] == 0) {return;}
-  if (strlen(buf)<=4) {buf[0]=0; return;} // only accept lines with >4 characters ?
+ // if (strlen(buf)<=4) {buf[0]=0; return;} // only accept lines with >4 characters ?
     WriteLine = WriteLine + 1;
     if (WriteLine * font > (NumberoftextLines * 2)) { WriteLine = 1; }
     int32_t ypos = 8 + (WriteLine * font * (TEXT_HEIGHT / 2));
